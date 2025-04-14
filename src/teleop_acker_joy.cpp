@@ -51,6 +51,7 @@ namespace teleop_acker_joy
  */
 struct TeleopAckerJoy::Impl
 {
+  std::string topic_prefix;
 
   // TODO: Perhaps individual message?
   static constexpr std::array lighting_command_names = {
@@ -69,6 +70,7 @@ struct TeleopAckerJoy::Impl
   std::map<std::string, rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr> cmd_lights_pub;
   
   std::string ack_topic;
+  std::string joy_topic;
 
   bool require_enable_button;
   int64_t enable_button;
@@ -94,10 +96,10 @@ TeleopAckerJoy::TeleopAckerJoy(const rclcpp::NodeOptions& options) : Node("teleo
 {
   pimpl_ = new Impl;
 
-  const std::string topic_prefix = "cmd/"; // TODO: make parameter?
+  pimpl_->topic_prefix = this->declare_parameter("topic_prefix, cmd/");
 
   pimpl_->ack_topic = this->declare_parameter("ack_topic", "drive");
-  
+  pimpl_->joy_topic = this->declare_parameter("joy_topic", "joy_ego");
 
   // publisher
   pimpl_->cmd_vel_pub =
@@ -108,7 +110,7 @@ TeleopAckerJoy::TeleopAckerJoy(const rclcpp::NodeOptions& options) : Node("teleo
   std::map<std::string, int64_t> default_button_map;
   for (const auto& lighting_name : Impl::lighting_command_names)
   {
-    const std::string publish_path = topic_prefix + lighting_name;
+    const std::string publish_path = pimpl->topic_prefix + lighting_name;
     // ROS_INFO_NAMED("TeleopAckerJoy", "publishing to %s", publish_path.c_str());
     pimpl_->cmd_lights_pub.emplace(lighting_name,
         this->create_publisher<std_msgs::msg::Bool>(
@@ -121,7 +123,7 @@ TeleopAckerJoy::TeleopAckerJoy(const rclcpp::NodeOptions& options) : Node("teleo
 
   // subscriber
   pimpl_->joy_sub = this->create_subscription<sensor_msgs::msg::Joy>(
-    "joy",
+    pimpl_->joy_topic,
     rclcpp::QoS(rclcpp::KeepLast(1)),
     std::bind(&TeleopAckerJoy::Impl::joyCallback, this->pimpl_, std::placeholders::_1));
 
@@ -176,7 +178,9 @@ TeleopAckerJoy::TeleopAckerJoy(const rclcpp::NodeOptions& options) : Node("teleo
     "Turbo on button %" PRId64 ".", pimpl_->enable_turbo_button);
 
   ROS_INFO_COND_NAMED(true, "TeleopAckerJoy",
-      "Publishing on topic '%s'" PRId64 ".", pimpl_->ack_topic.c_str());
+      "Publishing on topic '%s'.", pimpl_->ack_topic.c_str());
+  ROS_INFO_COND_NAMED(true, "TeleopAckerJoy",
+      "Subscribing on joy topic '%s'.", pimpl_->joy_topic.c_str());
 
   for (const auto& [name, value] : pimpl_->button_map)
   {
@@ -226,6 +230,7 @@ TeleopAckerJoy::TeleopAckerJoy(const rclcpp::NodeOptions& options) : Node("teleo
     };
     static std::set<std::string> stringparams = {
       "ack_topic",
+      "joy_topic",
     };
     auto result = rcl_interfaces::msg::SetParametersResult();
     result.successful = true;

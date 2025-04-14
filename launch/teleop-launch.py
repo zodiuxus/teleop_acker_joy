@@ -8,30 +8,37 @@ import launch_ros.actions
 
 def generate_launch_description():
     joy_config = launch.substitutions.LaunchConfiguration('joy_config')
-    joy_dev = launch.substitutions.LaunchConfiguration('joy_dev')
+    joy_dev= launch.substitutions.LaunchConfiguration('joy_dev')
     ack_topic = launch.substitutions.LaunchConfiguration('ack_topic')
     config_filepath = launch.substitutions.LaunchConfiguration('config_filepath')
+
+    joy_topic = launch.substitutions.LaunchConfiguration('joy_topic')
 
     return launch.LaunchDescription([
         launch.actions.DeclareLaunchArgument('ack_topic', default_value='drive'),
         launch.actions.DeclareLaunchArgument('joy_vel', default_value='cmd_vel'),
         launch.actions.DeclareLaunchArgument('joy_config', default_value='example'),
-        launch.actions.DeclareLaunchArgument('joy_dev', default_value='/dev/input/js0'),
+        launch.actions.DeclareLaunchArgument('joy_dev', default_value='1'),
+        launch.actions.DeclareLaunchArgument('joy_topic', default_value='joy'),
         launch.actions.DeclareLaunchArgument('config_filepath', default_value=[
             launch.substitutions.TextSubstitution(text=os.path.join(
                 get_package_share_directory('teleop_acker_joy'), 'config', '')),
             joy_config, launch.substitutions.TextSubstitution(text='.config.yaml')]),
 
         launch_ros.actions.Node(
-            package='joy', executable='joy_node', name='joy_node',
+            package='joy', executable='joy_node', name=joy_topic,
+            remappings=[
+                ('/joy', launch.substitutions.LaunchConfiguration('joy_topic'))
+                        ],
             parameters=[{
                 'dev': joy_dev,
                 'deadzone': 0.3,
                 'autorepeat_rate': 20.0,
-            }]),
+                }]
+            ),
         launch_ros.actions.Node(
             package='teleop_acker_joy', executable='teleop_acker_node',
-            name='teleop_acker_joy_node', parameters=[config_filepath, {'ack_topic': ack_topic}],
+            name='teleop_acker_joy_node', parameters=[config_filepath, {'ack_topic': ack_topic}, {'joy_topic': joy_topic}],
             remappings={('/cmd/vel', launch.substitutions.LaunchConfiguration('joy_vel'))},
             ),
     ])

@@ -33,10 +33,10 @@ teleop_acker_joy_node:
       turn_left: 2
       turn_right: 3
     
-    # what topic to publish on
-    ack_topic: "drive"
-
     failsafe_delay_ms: 500
+
+    # topic_prefix is defaulted to cmd/
+    topic_prefix: "cmd/"
 
 joy_node:
   ros__parameters:
