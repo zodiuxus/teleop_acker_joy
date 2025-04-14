@@ -96,7 +96,7 @@ TeleopAckerJoy::TeleopAckerJoy(const rclcpp::NodeOptions& options) : Node("teleo
 {
   pimpl_ = new Impl;
 
-  pimpl_->topic_prefix = this->declare_parameter("topic_prefix, cmd/");
+  pimpl_->topic_prefix = this->declare_parameter("topic_prefix", "cmd/");
 
   pimpl_->ack_topic = this->declare_parameter("ack_topic", "drive");
   pimpl_->joy_topic = this->declare_parameter("joy_topic", "joy_ego");
@@ -110,7 +110,7 @@ TeleopAckerJoy::TeleopAckerJoy(const rclcpp::NodeOptions& options) : Node("teleo
   std::map<std::string, int64_t> default_button_map;
   for (const auto& lighting_name : Impl::lighting_command_names)
   {
-    const std::string publish_path = pimpl->topic_prefix + lighting_name;
+    const std::string publish_path = pimpl_->topic_prefix + lighting_name;
     // ROS_INFO_NAMED("TeleopAckerJoy", "publishing to %s", publish_path.c_str());
     pimpl_->cmd_lights_pub.emplace(lighting_name,
         this->create_publisher<std_msgs::msg::Bool>(
