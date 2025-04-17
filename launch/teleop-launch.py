@@ -31,7 +31,7 @@ def generate_launch_description():
                 ('/joy', launch.substitutions.LaunchConfiguration('joy_topic'))
                         ],
             parameters=[{
-                'dev': joy_dev,
+                'device_id': joy_dev,
                 'deadzone': 0.3,
                 'autorepeat_rate': 20.0,
                 }]
