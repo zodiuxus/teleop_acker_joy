@@ -1,6 +1,6 @@
 teleop_acker_joy_node:
   ros__parameters:
-    axis.linear: 4
+    axis.linear: 1
     scale.linear: .45
     scale_turbo.linear: 0.7
 
